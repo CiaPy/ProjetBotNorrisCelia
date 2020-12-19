@@ -1,0 +1,155 @@
+#!/usr/bin/python3
+# -*- coding: UTF-8 -*-
+
+# A voir sur le serveur /var/www/html/datalab/celiaform.py ou https://datalab.myconnectech.fr:444/datalab/celiaform.py
+
+import psycopg2, config # import librairies
+import cgi, cgitb
+cgitb.enable()
+
+print("""Content-type: text/html; charset=utf-8
+
+<html>
+<head>
+  <title>Chuck Norris Projet</title>
+    <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+  
+	<style>
+	@import url('https://fonts.googleapis.com/css2?family=Josefin+Sans&display=swap');
+	* {
+    margin: 0;
+    padding:0; 
+}
+
+  div {
+            margin-bottom: 30px;
+            padding-left: 50px;
+        }
+        
+        label {
+            display: inline;
+            width: 400px;
+            text-align: right;
+            padding: 10px;
+        }
+        
+        body {
+           background-color: #f8f2f2;
+        }
+	form div + div {
+    margin-top: 1em;
+  }
+  
+  h1{
+  font-family: 'Jose fin', monospace;
+  
+  }
+  
+	h2 {
+    font-size: 1em;
+    margin: 20px 0px;
+font-family: 'Jose fin', monospace;
+}
+
+	img { /*pour adapter format photo*/
+    max-width: 100% ;
+    height: auto ;
+	</style>
+	
+
+</head>
+  
+  <body>""")
+  
+print(''' 	
+
+<div class="fh5co-loader"></div>
+	
+	<div id="page">
+	<nav class="fh5co-nav" role="navigation">
+		<div class="container">
+			<div class="fh5co-top-logo">	
+			<div class="fh5co-top-menu menu-1 text-center">			
+			</div>	
+			</div>	
+		</div>
+	</div>
+	</nav>
+	
+	
+				<div class="text-center">
+					<h1> Best Jokes ordered by category !! </h1>
+			
+
+		
+	</div> ''')
+
+
+form = cgi.FieldStorage() # récupération des info de paramètres
+
+messagepsd = form['pseudo'].value
+#num = form['number'].value
+
+print('<center>')
+print('<h1 class="text-center"> Welcome </h1>', messagepsd , '<h1 class="text-center"> ʕ•ᴥ•ʔ </h1>')
+print('</center>')
+
+conn = psycopg2.connect(database="bdd_cmatto", user=config.user, password=config.password, host='localhost') # connexion
+cur = conn.cursor() # session
+   
+sql = f"""SELECT distinct on ("chuck_table"."categorie")"chuck_table"."categorie", "chuck_table"."note","chuck_table"."blague", "image_table"."display_img" 
+from "public"."chuck_table"
+JOIN (SELECT "chuck_table"."categorie", MAX("chuck_table"."note") as mxnote FROM "public"."chuck_table" GROUP BY "chuck_table"."categorie") as "myquery" ON "chuck_table"."categorie"="myquery"."categorie" and "chuck_table"."note" = "myquery"."mxnote" 
+JOIN "image_table" ON "chuck_table"."categorie"="image_table"."categorie";"""
+
+cur.execute(sql) # requête SELECT
+for data in cur.fetchall() : # récupération des lignes
+    #print('<h2 class="text-center"> %s , %s , %s , <img src=" %s " height="750" width="500" ></h2> ' %  (data[0], data[1], data[2], data[3]))
+	print('<h2 class="text-center"> ____ Catégorie : %s ____ </h2> ' %  (data[0]))
+	print('<h2 class="text-center"> Meilleure blague : %s </h2>' %  (data[2]))
+	print('<h2 class="text-center"> Note :%s </h2>' %  (data[1]))
+	print('<h2 class="text-center">  <img src=" %s " height="750" width="500" > </h2>' %  (data[3]))
+	
+    
+conn.close()
+print('''<div id="fh5co-started">
+		<div class="container">
+			<div class="row animate-box">
+				<div class=" text-center fh5co-heading">
+					<h2> Merci</h2>
+			
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<footer id="fh5co-footer" role="contentinfo">
+		<div class="container">
+			<div class="row copyright">
+				<div class="col-md-12 text-center">
+					<p>
+						<small class="block">&copy; 2016 Free HTML5. All Rights Reserved.</small> 
+						<small class="block">Designed by <a href="http://freehtml5.co/" target="_blank">FreeHTML5.co</a> Demo Images: <a href="http://unsplash.co/" target="_blank">Unsplash</a> &amp; <a href="http://blog.gessato.com/" target="_blank">Gessato</a></small>
+					</p>
+
+					
+				</div>
+			</div>
+
+		</div>
+	</footer>
+	</div>
+
+	<div class="gototop js-top">
+		<a href="#" class="js-gotop"><i class="icon-arrow-up"></i></a>
+	</div>
+
+<!-- fin de menu de navigation -->''')
+print("</body></html>")
+
